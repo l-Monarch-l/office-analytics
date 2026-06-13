@@ -1,0 +1,7 @@
+ultralytics
+opencv-python-headless
+flask
+psycopg2-binary
+sqlalchemy
+numpy
+python-dotenv

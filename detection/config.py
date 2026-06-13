@@ -1,0 +1,1 @@
+VIDEO_SOURCE = 'data/video1_4.avi'
