@@ -110,3 +110,50 @@ def get_recent_events():
         {"time": "2026-06-02 15:30:22", "zone": "Переговорная", "type": "Вход"},
         {"time": "2026-06-02 15:28:15", "zone": "Open Space", "type": "Выход"},
     ])
+
+
+
+@api.route('/heatmap', methods=['GET'])
+def get_heatmap_data():
+    """Возвращает данные для тепловой карты: матрица зоны x часы (средняя занятость)"""
+    db = SessionLocal()
+    # Данные за последние 24 часа, почасово, по зонам
+    end = datetime.now()
+    start = end - timedelta(hours=24)
+    
+    # Получаем все зоны
+    zones = db.query(Zone).all()
+    zone_names = [z.name for z in zones]
+    zone_ids = [z.id for z in zones]
+    
+    # Для каждого часа (0-23) и каждой зоны – средняя занятость
+    hours = list(range(24))
+    data_matrix = []
+    
+    for hour in hours:
+        hour_start = start.replace(hour=hour, minute=0, second=0, microsecond=0)
+        hour_end = hour_start + timedelta(hours=1)
+        row = []
+        for zid in zone_ids:
+            avg = db.query(func.avg(OccupancyMetric.people_count)).filter(
+                OccupancyMetric.zone_id == zid,
+                OccupancyMetric.timestamp >= hour_start,
+                OccupancyMetric.timestamp < hour_end
+            ).scalar()
+            row.append(round(avg or 0, 1))
+        data_matrix.append(row)
+    
+    db.close()
+    
+    # Формат для ECharts heatmap: [час, индекс_зоны, значение]
+    series_data = []
+    for i, hour in enumerate(hours):
+        for j, val in enumerate(data_matrix[i]):
+            series_data.append([i, j, val])
+    
+    return jsonify({
+        "zones": zone_names,
+        "hours": [f"{h}:00" for h in hours],
+        "data": series_data,
+        "max": max([v for row in data_matrix for v in row]) if data_matrix else 1
+    })

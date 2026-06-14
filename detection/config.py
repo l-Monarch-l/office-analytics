@@ -1,1 +1,1 @@
-VIDEO_SOURCE = 'data/video1_4.avi'
+VIDEO_SOURCE = 'data/camera1.mp4'

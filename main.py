@@ -29,7 +29,7 @@ def main():
     frame_count = 0
     saved_count = 0
     start_time = time.time()
-
+    
     print(f"Обработка видео из {VIDEO_SOURCE}...")
 
     while True:
